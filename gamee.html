@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HELL ARMOR</title>
+    <style>
+        /* --- 1. Base Styles (Modernized Dark/Red Theme) --- */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* พื้นหลังใหม่: ลายตารางเรียบง่ายแต่ดูดี */
+            background-color: #0d0d0d; 
+            background-image: linear-gradient(rgba(231, 76, 60, 0.05) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(231, 76, 60, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: 'Roboto Mono', monospace;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0; 
+            height: 100vh; 
+            touch-action: manipulation;
+            overflow: hidden; 
+        }
+
+        #game-container {
+            position: relative; 
+            /* **NEW: ขยายให้ใกล้เคียงขอบจอที่สุด** */
+            width: 99vw; /* ใช้ 99% ของความกว้างหน้าจอ */
+            height: 99vh; /* ใช้ 99% ของความสูงหน้าจอ */
+            max-width: 99vw; 
+            max-height: 99vh; 
+            aspect-ratio: 16 / 9; /* อัตราส่วนใหม่ 16:9 */
+            /* **CRITICAL: ใช้ object-fit เพื่อให้ภาพไม่บิดเบี้ยว** */
+            object-fit: contain; 
+            margin-top: auto;
+            margin-bottom: auto; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #game-canvas {
+            position: absolute; 
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            
+            border: 4px solid #e74c3c; /* Red border for Hell Armor */
+            background-color: #333333;
+            display: block;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.9); /* เพิ่มแสงให้ดูดุดัน */
+            
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated; 
+            image-rendering: crisp-edges;
+        }
+        
+        /* --- 2. Info/Score Panel --- */
+        #score-container {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            width: 99vw; /* ขยายให้เต็มความกว้างจอ */
+            max-width: 99vw;
+            font-size: 2.5vmin; 
+            color: #ecf0f1;
+            background-color: #1c2833; /* Darker bar */
+            padding: 8px 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border-bottom: 2px solid #e74c3c;
+        }
+        
+        /* --- 3. UI Panels (Menus) - ปรับปรุงหลัก (เต็มหน้าจอ) --- */
+        .ui-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            color: #ecf0f1;
+            z-index: 100;
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px; /* ลด padding */
+            font-size: 3vmin; 
+            overflow-y: auto; /* ควบคุม scroll เฉพาะแนวตั้ง */
+            /* เพิ่มแสงเงาให้ดูเท่ */
+            box-shadow: inset 0 0 30px rgba(231, 76, 60, 0.3), 0 0 50px rgba(0, 0, 0, 0.7);
+        }
+        
+        /* Start Menu Specific */
+        #start-menu h1 {
+            font-size: 10vmin; /* ลดขนาด H1 ลง */
+            color: #ffffff; /* แดงดุดัน */
+            text-shadow: 0 0 15px #FF0000;
+            margin-bottom: 5px;
+        }
+        #start-menu p {
+            font-size: 1.5vmin;
+            margin-bottom: 30px;
+        }
+
+        /* --- Shop Specific Styles --- */
+        #shop-menu, #skins-menu {
+            overflow-y: auto; 
+            padding: 20px 0; /* เพิ่ม padding ด้านบนและล่าง */
+        }
+        .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%; /* ขยายเป็น 90% ของความกว้างเมนู */
+            max-width: 500px; /* เพิ่ม max-width */
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #1e2832; /* Darker background for items */
+            border-left: 5px solid #3498db;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        
+        /* --- 4. Controls/Buttons - ปรับปรุงหลัก --- */
+        .game-button {
+            padding: 15px 30px; /* ทำให้ปุ่มใหญ่ขึ้น */
+            font-size: 2.2vmin; 
+            cursor: pointer;
+            background-color: #3498db;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 5px #000;
+            transition: all 0.1s ease;
+            outline: none;
+            text-transform: uppercase;
+        }
+        .game-button:hover {
+            opacity: 0.9;
+        }
+        .game-button:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+        
+        /* ปุ่ม Start (สำคัญที่สุด) */
+        #start-menu .game-button:first-of-type {
+            background-color: #FF0000;
+            box-shadow: 0 3px #ffffff;
+            font-size: 3vmin;
+            padding: 18px 40px;
+            margin-bottom: 20px !important;
+        }
+        #start-menu .game-button:first-of-type:active {
+            transform: translateY(6px);
+            box-shadow: none;
+        }
+        
+        /* ปุ่ม Laser */
+        #laser-button {
+            background-color: #e74c3c;
+            box-shadow: 0 4px #c0392b;
+        }
+        #laser-button:disabled {
+            background-color: #95a5a6;
+            box-shadow: 0 4px #7f8c8d;
+        }
+
+        /* ปุ่ม Shop */
+        .upgrade-button {
+            padding: 8px 15px;
+            font-size: 1.8vmin;
+            cursor: pointer;
+            background-color: #2ecc71;
+            color: #1e2832;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.1s;
+            font-weight: bold;
+            box-shadow: 0 3px #27ae60;
+        }
+        .upgrade-button:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+        
+        /* Pause Overlay */
+        #pause-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #e74c3c;
+            font-size: 8vmin;
+            font-weight: bold;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            z-index: 110;
+        }
+
+
+        /* --- 5. Mobile/Touch Controls --- */
+        #mobile-controls {
+            position: relative; 
+            margin-top: 10px; 
+            width: 99vw; /* ขยายให้เต็มความกว้างจอ */
+            max-width: 99vw;
+            display: flex; /* Ensure it is flex */
+            justify-content: space-between;
+            padding: 10px 0;
+            align-self: center; 
+        }
+        .mobile-btn {
+            padding: 20px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background-color: rgba(52, 152, 219, 0.7);
+            color: #ffffff;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            font-weight: bold;
+            user-select: none; 
+        }
+        #fire-button {
+            background-color: rgba(231, 76, 60, 0.7);
+            border-color: #e74c3c;
+        }
+        
+        /* Combo System Styling */
+        #combo-display-overlay { 
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            text-align: center;
+            color: #2ecc71;
+            font-size: 8vmin;
+            font-weight: bold;
+            /* ปรับให้ดูเด่นขึ้น */
+            text-shadow: 0 0 10px rgba(46, 204, 113, 1), 0 0 20px rgba(46, 204, 113, 0.5);
+            display: none;
+            z-index: 120;
+        }
+         /* Wave Message Overlay */
+        #wave-message-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200; 
+            pointer-events: none; /* Crucial: allows clicks to pass through */
+        }
+        .wave-message-box {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 4vmin;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 1s ease-out;
+        }
+        
+        /* Power-Up Timer Display */
+        #powerup-timer {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 2vmin;
+            font-weight: bold;
+            z-index: 150;
+            display: none;
+            border: 2px solid #2980b9;
+        }
+        
+        /* --- NEW: Controls Bar Styling --- */
+        #controls-bar {
+            margin-top: 10px;
+            width: 99vw; /* ขยายให้เต็มความกว้างจอ */
+            max-width: 99vw;
+            display: none; /* Controlled by JS */
+            justify-content: center;
+            gap: 15px;
+            padding-bottom: 10px; 
+        }
+                /* --- In-Game Controls Overlay (มุมขวาบน) --- */
+        #ingame-controls-overlay {
+            position: absolute;
+            top: 5px; /* ชิดขอบบน */
+            right: 5px; /* ชิดขอบขวา */
+            z-index: 150; /* อยู่เหนือ Canvas, ใต้ Pause/Message Overlay */
+            display: none; /* Controlled by JS */
+            gap: 5px;
+        }
+
+        .game-control-btn {
+            padding: 8px 12px;
+            font-size: 2vmin; 
+            cursor: pointer;
+            background-color: rgba(52, 152, 219, 0.6); /* สีฟ้าโปร่งแสง */
+            color: #ffffff;
+            border: 2px solid #2980b9;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 2px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+
+        .game-control-btn:hover {
+            background-color: rgba(52, 152, 219, 0.8);
+        }
+
+        .game-control-btn:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="960" height="540"></canvas>
+        
+        <div id="start-menu" class="ui-panel">
+            <h1>HELL ARMOR</h1> 
+            <p style="font-size: 2vmin; color:#f1c40f;">
+                High Score: <span id="high-score-display">0</span> | Total Credits: <span id="credit-display-menu">0</span>
+            </p>
+            <button class="game-button" onclick="startGameFlow()" style="margin-top: 10px;">
+                🔴 เริ่มเกม (Start Game)
+            </button>
+            <button class="game-button" onclick="changeScreen('SHOP')" style="margin-top: 15px; background-color: #f1c40f; box-shadow: 0 4px #F5F5F5; color: #fff;">
+                🛠️ อัปเกรด (Shop)
+            </button>
+            <button class="game-button" onclick="changeScreen('SKINS')" style="margin-top: 15px; background-color: #8e44ad; box-shadow: 0 4px #F5F5F5;">
+                🎨 คอลเลกชันสกิน (Skins)
+            </button>
+            <button class="game-button" onclick="openOptions()" style="margin-top: 15px; background-color: #4169E1; box-shadow: 0 4px #F5F5F5;">
+                ⚙️ ตัวเลือก (Options)
+            </button>
+            <button class="game-button" onclick="changeScreen('HELP')" style="margin-top: 15px; background-color: #3498db; box-shadow: 0 4px #F5F5F5;">
+                ❓ วิธีเล่น (Help)
+            </button>
+        <a href="Home.html">
+            <button class="game-button" style="margin-top: 15px;">
+                ⬅ Back to Menu
+            </button>
+        </a>
+
+        </div>
+
+        <div id="shop-menu" class="ui-panel">
+            <h1>SHOP & UPGRADES</h1>
+            <h2 style="color:#2ecc71; margin-bottom: 20px;">Credits: <span id="credit-display-shop">0</span></h2>
+
+            <div class="upgrade-item">
+                <div>
+                    **DAMAGE** (Level <span id="upgrade-damage-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">พลังโจมตีกระสุนเพิ่มขึ้น</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('DAMAGE')" id="buy-damage">
+                    BUY: <span id="cost-damage">100</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **FIRE RATE** (Level <span id="upgrade-fireRate-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">อัตราการยิงเร็วขึ้น</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('FIRE')" id="buy-fire">
+                    BUY: <span id="cost-fire">150</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **SPEED** (Level <span id="upgrade-speed-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">ความเร็วรถถังเพิ่มขึ้น</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('SPEED')" id="buy-speed">
+                    BUY: <span id="cost-speed">200</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **BASE ARMOR** (Level <span id="upgrade-armor-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">เพิ่มพลังชีวิตฐาน</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('ARMOR')" id="buy-armor">
+                    BUY: <span id="cost-armor">250</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **LASER USE** (Max <span id="upgrade-laserUses-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">จำนวนครั้งที่ใช้เลเซอร์กวาดจอได้</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('LASER')" id="buy-laser">
+                    BUY: <span id="cost-laser">500</span>
+                </button>
+            </div>
+            
+            <h3 style="margin-top: 30px; color:#3498db;">CONSUMABLES</h3>
+            <div class="upgrade-item">
+                <div>
+                    **EXTRA LIFE** (+1 Life)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">เพิ่มชีวิตรถถังทันที</span>
+                </div>
+                <button class="upgrade-button" onclick="buyConsumable('LIFE')" id="buy-life" style="background-color: #f39c12; box-shadow: 0 4px #e67e22;">
+                    BUY: 500
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **BASE REPAIR** (Full Base Health)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">เติมพลังชีวิตฐานให้เต็ม</span>
+                </div>
+                <button class="upgrade-button" onclick="buyConsumable('REPAIR')" id="buy-repair" style="background-color: #e74c3c; box-shadow: 0 4px #c0392b;">
+                    BUY: 800
+                </button>
+            </div>
+            
+
+            <p style="margin-top: 30px;">
+                <button class="game-button" onclick="changeScreen('START')">
+                    ⬅️ กลับสู่เมนูหลัก
+                </button>
+            </p>
+        </div>
+
+
+        <div id="skins-menu" class="ui-panel">
+            <h1>SKINS COLLECTION</h1>
+            <h2 style="color:#2ecc71; margin-bottom: 20px;">Current Skin: <span id="active-skin-display">Default</span></h2>
+            <div id="skins-list" style="display: flex; flex-wrap: wrap; justify-content: center; max-width: 600px; gap: 15px; margin-bottom: 30px;">
+                </div>
+            <button class="game-button" onclick="changeScreen('START')">
+                ⬅️ กลับสู่เมนูหลัก
+            </button>
+        </div>
+
+        <div id="options-menu" class="ui-panel">
+            <h1>ตัวเลือก (Options)</h1>
+            <p>ปรับระดับเสียง (Volume):</p>
+            <input type="range" id="volume-slider" min="0" max="100" value="30" onchange="setVolume(this.value)">
+            
+            <p style="margin-top: 30px;">
+                <button class="game-button" onclick="resetHighScore()" style="background-color: #e74c3c; box-shadow: 0 4px #c0392b;">
+                    ⚠️ รีเซ็ต High Score & Data
+                </button>
+            </p>
+            <p style="margin-top: 15px;">
+                <button class="game-button" onclick="changeScreen('START')">
+                    ⬅️ กลับสู่เมนูหลัก
+                </button>
+            </p>
+        </div>
+        
+        <div id="help-menu" class="ui-panel">
+            <h1>HOW TO PLAY HELL ARMOR</h1>
+            <p style="text-align: left; max-width: 400px; margin-top: 20px; font-size: 2vmin;">
+                **เป้าหมาย:** ป้องกันฐานของคุณจากฝูงศัตรูที่มาตาม 5 เลน<br>
+                **การควบคุม:**<br>
+                - **ซ้าย/ขวา ( Arrow Keys ):** เคลื่อนที่<br>
+                - **ยิง ( Spacebar ):** ยิงกระสุน<br>
+                - **เลเซอร์ (Q):** กวาดล้างศัตรูทั้งหน้าจอ (จำกัดการใช้)<br>
+                - **หยุด/เล่นต่อ (P):** หยุดเกมชั่วคราว<br>
+                <br>
+                **การหาเงิน:** <span style="color:#2ecc71;">Credits</span> จะถูกดรอปเมื่อทำลายศัตรู สามารถนำไปอัปเกรดใน Shop ได้
+            </p>
+            <p style="margin-top: 30px;">
+                <button class="game-button" onclick="changeScreen('START')">
+                    ⬅️ กลับสู่เมนูหลัก
+                </button>
+            </p>
+        </div>
+
+        <div id="message-box" class="ui-panel">
+            <h1 style="color:#e74c3c; font-size: 8vmin; margin-bottom: 5px;">GAME OVER</h1>
+            <h2 style="color:#e74c3c;">YOU ARE DEFEATED!</h2>
+            <h3 style="color:#2ecc71;">Credits Earned: <span id="final-credits">0</span></h3>
+            <p style="font-size: 0.5em; margin-top: 10px; color:#f1c40f;">
+                คะแนนของคุณ: <span id="final-score">0</span>
+            </p>
+            <button class="game-button" onclick="changeScreen('START')">
+                ⬅️ เมนูหลัก (Main Menu)
+            </button>
+        </div>
+
+        <div id="pause-overlay">PAUSED</div>
+        <div id="powerup-timer"></div>
+        <div id="combo-display-overlay"></div> 
+        
+        <div id="ingame-controls-overlay">
+            <button class="game-control-btn" onclick="togglePause()">⏸️</button>
+            <button class="game-control-btn" onclick="changeScreen('OPTIONS')">⚙️</button>
+            <button class="game-control-btn" onclick="changeScreen('START')">🏠</button>
+        </div>
+        
+        <div id="wave-message-overlay"></div>
+    </div>
+    
+    <div id="mobile-controls" style="display: none;"> <div class="direction-btns">
+            <div class="mobile-btn" id="left-button" ontouchstart="setKey(true, 'ArrowLeft')" ontouchend="setKey(false, 'ArrowLeft')" onmousedown="setKey(true, 'ArrowLeft')" onmouseup="setKey(false, 'ArrowLeft')">
+                &lt;
+            </div>
+            <div class="mobile-btn" id="right-button" ontouchstart="setKey(true, 'ArrowRight')" ontouchend="setKey(false, 'ArrowRight')" onmousedown="setKey(true, 'ArrowRight')" onmouseup="setKey(false, 'ArrowRight')">
+                &gt;
+            </div>
+        </div>
+        <div id="fire-container">
+            <div class="mobile-btn" id="fire-button" ontouchstart="setKey(true, ' ')" ontouchend="setKey(false, ' ')" onmousedown="setKey(true, ' ')" onmouseup="setKey(false, ' ')">
+                FIRE
+            </div>
+        </div>
+    </div>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="960" height="540"></canvas>
+        
+        <div id="start-menu" class="ui-panel">
+            <h1>HELL ARMOR</h1> 
+            <p style="font-size: 2vmin; color:#f1c40f;">
+                High Score: <span id="high-score-display">0</span> | Total Credits: <span id="credit-display-menu">0</span>
+            </p>
+            <button class="game-button" onclick="startGameFlow()" style="margin-top: 10px;">
+                🔴 เริ่มเกม (Start Game)
+            </button>
+            <button class="game-button" onclick="changeScreen('SHOP')" style="margin-top: 15px; background-color: #f1c40f; box-shadow: 0 4px #e7b100; color: #1e2832;">
+                🛠️ อัปเกรด (Shop)
+            </button>
+            <button class="game-button" onclick="changeScreen('SKINS')" style="margin-top: 15px; background-color: #8e44ad; box-shadow: 0 4px #783d8a;">
+                🎨 คอลเลกชันสกิน (Skins)
+            </button>
+            <button class="game-button" onclick="openOptions()" style="margin-top: 15px;">
+                ⚙️ ตัวเลือก (Options)
+            </button>
+            <button class="game-button" onclick="changeScreen('HELP')" style="margin-top: 15px; background-color: #3498db; box-shadow: 0 4px #2980b9;">
+                ❓ วิธีเล่น (Help)
+            </button>
+        <a href="Play.html">
+            <button class="game-button" style="margin-top: 15px;">
+                ⬅ Back to Menu
+            </button>
+        </a>
+
+        </div>
+                <div id="shop-menu" class="ui-panel">
+            <h1>SHOP & UPGRADES</h1>
+            <h2 style="color:#2ecc71; margin-bottom: 20px;">Credits: <span id="credit-display-shop">0</span></h2>
+
+            <div class="upgrade-item">
+                <div>
+                    **DAMAGE** (Level <span id="upgrade-damage-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">พลังโจมตีกระสุนเพิ่มขึ้น</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('DAMAGE')" id="buy-damage">
+                    BUY: <span id="cost-damage">100</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **FIRE RATE** (Level <span id="upgrade-fireRate-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">อัตราการยิงเร็วขึ้น</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('FIRE')" id="buy-fire">
+                    BUY: <span id="cost-fire">150</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **SPEED** (Level <span id="upgrade-speed-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">ความเร็วรถถังเพิ่มขึ้น</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('SPEED')" id="buy-speed">
+                    BUY: <span id="cost-speed">200</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **BASE ARMOR** (Level <span id="upgrade-armor-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">เพิ่มพลังชีวิตฐาน</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('ARMOR')" id="buy-armor">
+                    BUY: <span id="cost-armor">250</span>
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **LASER USE** (Max <span id="upgrade-laserUses-level">1</span>)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">จำนวนครั้งที่ใช้เลเซอร์กวาดจอได้</span>
+                </div>
+                <button class="upgrade-button" onclick="buyUpgrade('LASER')" id="buy-laser">
+                    BUY: <span id="cost-laser">500</span>
+                </button>
+            </div>
+            
+            <h3 style="margin-top: 30px; color:#3498db;">CONSUMABLES</h3>
+            <div class="upgrade-item">
+                <div>
+                    **EXTRA LIFE** (+1 Life)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">เพิ่มชีวิตรถถังทันที</span>
+                </div>
+                <button class="upgrade-button" onclick="buyConsumable('LIFE')" id="buy-life" style="background-color: #f39c12; box-shadow: 0 4px #e67e22;">
+                    BUY: 500
+                </button>
+            </div>
+            <div class="upgrade-item">
+                <div>
+                    **BASE REPAIR** (Full Base Health)<br>
+                    <span style="font-size: 0.5em; color: #ccc;">เติมพลังชีวิตฐานให้เต็ม</span>
+                </div>
+                <button class="upgrade-button" onclick="buyConsumable('REPAIR')" id="buy-repair" style="background-color: #e74c3c; box-shadow: 0 4px #c0392b;">
+                    BUY: 800
+                </button>
+            </div>
+            
+
+            <p style="margin-top: 30px;">
+                <button class="game-button" onclick="changeScreen('START')">
+                    ⬅️ กลับสู่เมนูหลัก
+                </button>
+            </p>
+        </div>
+                <div id="skins-menu" class="ui-panel">
+            <h1>SKINS COLLECTION</h1>
+            <h2 style="color:#2ecc71; margin-bottom: 20px;">Current Skin: <span id="active-skin-display">Default</span></h2>
+            <div id="skins-list" style="display: flex; flex-wrap: wrap; justify-content: center; max-width: 600px; gap: 15px; margin-bottom: 30px;">
+                </div>
+            <button class="game-button" onclick="changeScreen('START')">
+                ⬅️ กลับสู่เมนูหลัก
+            </button>
+        </div>
+
+        <div id="options-menu" class="ui-panel">
+            <h1>ตัวเลือก (Options)</h1>
+            <p>ปรับระดับเสียง (Volume):</p>
+            <input type="range" id="volume-slider" min="0" max="100" value="30" onchange="setVolume(this.value)">
+            
+            <p style="margin-top: 30px;">
+                <button class="game-button" onclick="resetHighScore()" style="background-color: #e74c3c; box-shadow: 0 4px #c0392b;">
+                    ⚠️ รีเซ็ต High Score & Data
+                </button>
+            </p>
+            <p style="margin-top: 15px;">
+                <button class="game-button" onclick="changeScreen('START')">
+                    ⬅️ กลับสู่เมนูหลัก
+                </button>
+            </p>
+        </div>
+        
+        <div id="help-menu" class="ui-panel">
+            <h1>HOW TO PLAY HELL ARMOR</h1>
+            <p style="text-align: left; max-width: 400px; margin-top: 20px; font-size: 2vmin;">
+                **เป้าหมาย:** ป้องกันฐานของคุณจากฝูงศัตรูที่มาตาม 5 เลน<br>
+                **การควบคุม:**<br>
+                - **ซ้าย/ขวา (A/D หรือ Arrow Keys):** เคลื่อนที่<br>
+                - **ยิง (Spacebar หรือ Touch FIRE):** ยิงกระสุน<br>
+                - **เลเซอร์ (Q):** กวาดล้างศัตรูทั้งหน้าจอ (จำกัดการใช้)<br>
+                - **หยุด/เล่นต่อ (P):** หยุดเกมชั่วคราว<br>
+                - **Touch Controls:** ปุ่มควบคุมบนหน้าจอมือถือ (จะปรากฏขึ้นเอง)<br>
+                <br>
+                **การหาเงิน:** <span style="color:#2ecc71;">Credits</span> จะถูกดรอปเมื่อทำลายศัตรู สามารถนำไปอัปเกรดใน Shop ได้
+            </p>
+            <p style="margin-top: 30px;">
+                <button class="game-button" onclick="changeScreen('START')">
+                    ⬅️ กลับสู่เมนูหลัก
+                </button>
+            </p>
+        </div>
+                <div id="message-box" class="ui-panel">
+            <h1 style="color:#e74c3c; font-size: 8vmin; margin-bottom: 5px;">GAME OVER</h1>
+            <h2 style="color:#e74c3c;">YOU ARE DEFEATED!</h2>
+            <h3 style="color:#2ecc71;">Credits Earned: <span id="final-credits">0</span></h3>
+            <p style="font-size: 0.5em; margin-top: 10px; color:#f1c40f;">
+                คะแนนของคุณ: <span id="final-score">0</span>
+            </p>
+            <button class="game-button" onclick="changeScreen('START')">
+                ⬅️ เมนูหลัก (Main Menu)
+            </button>
+        </div>
+
+        <div id="pause-overlay">PAUSED</div>
+        <div id="powerup-timer"></div>
+        <div id="combo-display-overlay"></div> 
+        
+        <div id="ingame-controls-overlay">
+            <button class="game-control-btn" onclick="togglePause()">⏸️</button>
+            <button class="game-control-btn" onclick="changeScreen('OPTIONS')">⚙️</button>
+            <button class="game-control-btn" onclick="changeScreen('START')">🏠</button>
+        </div>
+        
+        <div id="wave-message-overlay"></div>
+    </div>
+    
+    <div id="mobile-controls" style="display: none;"> <div class="direction-btns">
+            <div class="mobile-btn" id="left-button" ontouchstart="setKey(true, 'ArrowLeft')" ontouchend="setKey(false, 'ArrowLeft')" onmousedown="setKey(true, 'ArrowLeft')" onmouseup="setKey(false, 'ArrowLeft')">
+                &lt;
+            </div>
+            <div class="mobile-btn" id="right-button" ontouchstart="setKey(true, 'ArrowRight')" ontouchend="setKey(false, 'ArrowRight')" onmousedown="setKey(true, 'ArrowRight')" onmouseup="setKey(false, 'ArrowRight')">
+                &gt;
+            </div>
+        </div>
+        <div id="fire-container">
+            <div class="mobile-btn" id="fire-button" ontouchstart="setKey(true, ' ')" ontouchend="setKey(false, ' ')" onmousedown="setKey(true, ' ')" onmouseup="setKey(false, ' ')">
+                FIRE
+            </div>
+        </div>
+    </div>
+
+    <div id="score-container">
+        <div style="color:#2ecc71;">CREDITS: <span id="credits-display">0</span> (Next Skin: <span id="next-skin-display">20</span>)</div> 
+        <div style="color:#f1c40f;">COMBO: <span id="combo-count">0</span></div>
+        <div style="color:#3498db;">คะแนน: <span id="score">0</span></div>
+        <div style="color:#e74c3c;">ชีวิต: <span id="lives">7</span></div>
+        <div style="color:#9b59b6;">WAVE: <span id="level">1</span></div>
+    </div>
+    
+    <div id="controls-bar" style="display: none;"> 
+        <button class="game-button" id="laser-button" onclick="useLaserWipe()">
+            LASER (Q): <span id="laser-use-count">0</span>
+        </button>
+        <button class="game-button" id="pause-button" onclick="togglePause()">หยุด/เล่นต่อ (P)</button>
+        <button class="game-button" id="menu-button" onclick="changeScreen('START')">ออกจากเกม</button>
+    </div>
+       <script>
+        // --- 1. Global Setup & State Management ---
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Display Elements (CRITICAL: These must match IDs in HTML)
+        const scoreDisplay = document.getElementById('score');
+        const creditsDisplay = document.getElementById('credits-display');
+        const nextSkinDisplay = document.getElementById('next-skin-display'); 
+        const comboCountDisplay = document.getElementById('combo-count'); 
+        const livesDisplay = document.getElementById('lives');
+        const levelDisplay = document.getElementById('level');
+        const highScoreDisplay = document.getElementById('high-score-display');
+        const creditDisplayMenu = document.getElementById('credit-display-menu');
+        const laserButton = document.getElementById('laser-button');
+        const laserUseCount = document.getElementById('laser-use-count');
+        const mobileControls = document.getElementById('mobile-controls');
+        const powerUpTimerDisplay = document.getElementById('powerup-timer'); 
+        const comboDisplayOverlay = document.getElementById('combo-display-overlay'); 
+        const waveMessageOverlay = document.getElementById('wave-message-overlay'); 
+
+
+        
+        // UI Panels (Fixed References)
+        const uiPanels = {
+            'START': document.getElementById('start-menu'),
+            'OPTIONS': document.getElementById('options-menu'),
+            'SHOP': document.getElementById('shop-menu'),
+            'SKINS': document.getElementById('skins-menu'), 
+            'HELP': document.getElementById('help-menu'), 
+            'GAME_OVER': document.getElementById('message-box')
+        };
+        const pauseOverlay = document.getElementById('pause-overlay');
+        const controlsBar = document.getElementById('controls-bar'); 
+        const pauseButton = document.getElementById('pause-button'); 
+        const ingameControls = document.getElementById('ingame-controls-overlay');
+
+
+        let gameActive = false;
+        let isPaused = false;
+        let currentScreen = 'START';
+        let animationFrameId = null; 
+        let audioContext = null; 
+        let lastTime = 0; 
+        let masterVolume = 0.3;
+
+        // --- 2. Game Data (Persistence) ---
+        let gameStats = {
+            highScore: 0,
+            credits: 0,
+            upgrades: {
+                damage: 1, 
+                fireRate: 1, 
+                speed: 1,    
+                armor: 1,    
+                laserUses: 1 
+            },
+            skins: ['Default'], 
+            activeSkin: 'Default' 
+        };
+
+        // --- 3. Game Variables (In-Game) ---
+        let playerTank; 
+        let bullets;
+        let enemyBullets;
+        let enemies;
+        let particles;
+        let powerUps; 
+        
+        let score, lives, wave, currentCredits; 
+        let laserUses; 
+        let laserCooldown = 0; 
+        let lastShootTime;
+        let playerShootDelay; 
+        let enemySpawnTimer;
+        let enemySpawnDelay = 2000;
+        
+        let bulletDamage; 
+        let killCount = 0; 
+        const KILLS_TO_DROP_SKIN = 20; 
+        let bossActive = false;
+        
+        let currentCombo = 0; 
+        let lastKillTime = 0;
+        const COMBO_TIME_LIMIT = 2000; 
+        
+        // --- PowerUp Variables ---
+        const POWER_UP_TYPES = {
+            SHIELD: { color: '#3498db', symbol: 'S', name: 'Shield', duration: 8000 },
+            MULTI_SHOT: { color: '#8e44ad', symbol: 'M', name: 'Multi Shot', duration: 10000 },
+            FAST_FIRE: { color: '#e74c3c', symbol: 'F', name: 'Fast Fire', duration: 7000 },
+            CREDIT_MAGNET: { color: '#f1c40f', symbol: '€', name: 'Magnet', duration: 12000 } 
+        };
+        let powerUpActive = null; 
+        let powerUpDuration = 0;
+        let originalShootDelay;
+        let creditMagnetRange = 0; 
+
+        // --- Visual Effects Variables ---
+        let screenFlashTimer = 0; 
+        let cameraShakeX = 0;     
+        let cameraShakeY = 0;     
+        
+        let baseHealth; 
+        let MAX_BASE_HEALTH; 
+
+
+        // --- CONSTANTS (5 Lanes) - UPDATED FOR LANDSCAPE ---
+        const BASE_PLAYER_SPEED = 7;
+        const BASE_SHOOT_DELAY = 250;
+        const BASE_BULLET_DAMAGE = 1; 
+        const BASE_MAX_HEALTH = 100;
+        const MAX_UPGRADE_LEVEL = 5;
+        
+        const GAME_DATA_KEY = 'hellArmorDefenseData';
+        const NUM_LANES = 5; 
+        
+        // *** NEW LANDSCAPE DIMENSIONS ***
+        const CANVAS_WIDTH = 960;  
+        const CANVAS_HEIGHT = 540; 
+        
+        const LANE_WIDTH = CANVAS_WIDTH / NUM_LANES; 
+        const BASE_LINE_Y = CANVAS_HEIGHT - 50; 
+        
+        // --- Skin Definition ---
+        const ALL_TANK_SKINS = {
+            'Default': { color: '#2ecc71', barrelColor: '#1e8449', bulletColor: '#2ecc71' },
+            'Red-Camo': { color: '#e74c3c', barrelColor: '#c0392b', bulletColor: '#f1c40f' },
+            'Blue-Camo': { color: '#3498db', barrelColor: '#2980b9', bulletColor: '#3498db' },
+            'Gold-Plated': { color: '#f1c40f', barrelColor: '#e67e22', bulletColor: '#e67e22' },
+            'Black-Ops': { color: '#2c3e50', barrelColor: '#1e2832', bulletColor: '#bdc3c7' }
+        };
+                // -------------------------------------------------------------------
+        // ## 4. Utility Functions (Sound, UI Helpers, Controls)
+        // -------------------------------------------------------------------
+
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        function playSound(frequency, duration, type, volume, detune = 0, startAt = 0) {
+            if (masterVolume === 0) return;
+            try {
+                const context = getAudioContext();
+                const oscillator = context.createOscillator();
+                const gainNode = context.createGain();
+
+                oscillator.type = type; 
+                oscillator.frequency.setValueAtTime(frequency, context.currentTime + startAt);
+                oscillator.detune.setValueAtTime(detune, context.currentTime + startAt);
+
+                gainNode.gain.setValueAtTime(volume * masterVolume, context.currentTime + startAt);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + startAt + duration / 1000);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(context.destination);
+
+                oscillator.start(context.currentTime + startAt);
+                oscillator.stop(context.currentTime + startAt + duration / 1000);
+            } catch (e) {
+                console.error("Audio playback error:", e);
+            }
+        }
+        
+        function showWaveMessage(message, color = '#f1c40f') {
+            const messageBox = document.createElement('div');
+            messageBox.className = 'wave-message-box';
+            messageBox.style.color = color;
+            messageBox.textContent = message;
+
+            if (waveMessageOverlay) {
+                waveMessageOverlay.innerHTML = ''; // Clear previous messages
+                waveMessageOverlay.appendChild(messageBox);
+            
+                // Trigger fade in
+                setTimeout(() => {
+                    messageBox.style.opacity = 1;
+                }, 50);
+                
+                // Trigger fade out
+                setTimeout(() => {
+                    messageBox.style.opacity = 0;
+                }, 1000);
+                
+                // Remove element after fade out
+                setTimeout(() => {
+                    waveMessageOverlay.innerHTML = '';
+                }, 2000); 
+            }
+        }
+
+        let keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === 'q' || e.key === 'Q') useLaserWipe();
+            if (e.key === 'p' || e.key === 'P') togglePause();
+            // Handle spacebar fire here
+            if (e.key === ' ' && !isPaused && gameActive) fireBullet(); 
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // For mobile controls
+        function setKey(state, key) {
+            keys[key] = state;
+            // Only trigger fire on keydown/touchstart, not keyup/touchend
+            if (key === ' ' && state && !isPaused && gameActive) fireBullet(); 
+        }
+        
+        function handleControls() {
+            if (!playerTank) return;
+            const speed = playerTank.speed;
+            
+            if (keys['ArrowLeft'] || keys['a']) {
+                playerTank.x = Math.max(playerTank.x - speed, playerTank.size / 2);
+            }
+            if (keys['ArrowRight'] || keys['d']) {
+                playerTank.x = Math.min(playerTank.x + speed, canvas.width - playerTank.size / 2);
+            }
+        }
+        
+        function shakeCamera(intensity, duration) {
+            cameraShakeX = intensity;
+            cameraShakeY = intensity;
+            setTimeout(() => {
+                cameraShakeX = 0;
+                cameraShakeY = 0;
+            }, duration);
+        }
+        
+        function useLaserWipe() {
+            if (isPaused || laserCooldown > 0 || laserUses <= 0 || !gameActive) return;
+            
+            laserUses--;
+            laserCooldown = 5000; 
+            score += enemies.length * 50; 
+            currentCredits += enemies.length * 20;
+            
+            enemies = []; // Clear all enemies
+            enemyBullets = []; // Clear all enemy bullets
+            
+            screenFlashTimer = 300; 
+            shakeCamera(15, 300);
+            playSound(1200, 500, 'sawtooth', 0.8, 1.0); 
+            updateUI(0); // Call updateUI after state change
+        }
+
+        function togglePause() {
+            if (!gameActive) return;
+            isPaused = !isPaused;
+            
+            if (isPaused) {
+                if(pauseButton) pauseButton.textContent = 'เล่นต่อ (P)';
+                if(pauseOverlay) pauseOverlay.style.display = 'flex';
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            } else {
+                if(pauseButton) pauseButton.textContent = 'หยุด/เล่นต่อ (P)';
+                if(pauseOverlay) pauseOverlay.style.display = 'none';
+                lastTime = performance.now(); 
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        function hideAllUIs() {
+            Object.values(uiPanels).forEach(panel => {
+                if(panel) panel.style.display = 'none';
+            });
+            if(pauseOverlay) pauseOverlay.style.display = 'none';
+            if(waveMessageOverlay) waveMessageOverlay.innerHTML = ''; // Clear wave message when switching screens
+        }
+        
+        function updateStartMenuUI() {
+            if(highScoreDisplay) highScoreDisplay.textContent = gameStats.highScore;
+            if(creditDisplayMenu) creditDisplayMenu.textContent = gameStats.credits; 
+        }
+        function openOptions() {
+            changeScreen('OPTIONS');
+        }
+               // -------------------------------------------------------------------
+        // ## 5. Persistence & Options
+        // -------------------------------------------------------------------
+
+        function loadGameData() {
+            const data = localStorage.getItem(GAME_DATA_KEY);
+            if (data) {
+                gameStats = JSON.parse(data);
+                if (!gameStats.upgrades) {
+                    gameStats.upgrades = { damage: 1, fireRate: 1, speed: 1, armor: 1, laserUses: 1 };
+                }
+                 if (gameStats.upgrades.damage === undefined) gameStats.upgrades.damage = 1;
+                
+                if (!gameStats.skins || !Array.isArray(gameStats.skins) || gameStats.skins.length === 0) {
+                    gameStats.skins = ['Default'];
+                }
+                if (!gameStats.activeSkin || !ALL_TANK_SKINS[gameStats.activeSkin]) {
+                    gameStats.activeSkin = 'Default';
+                }
+            } else {
+                 gameStats.skins = ['Default']; 
+            }
+            updateStartMenuUI();
+            
+            const savedVolume = localStorage.getItem('hellArmorVolume'); 
+            if (savedVolume !== null) {
+                masterVolume = parseFloat(savedVolume) / 100;
+                const slider = document.getElementById('volume-slider');
+                if(slider) slider.value = savedVolume;
+            }
+        }
+        function saveGameData() {
+            localStorage.setItem(GAME_DATA_KEY, JSON.stringify(gameStats));
+        }
+        function setVolume(value) {
+            masterVolume = parseFloat(value) / 100;
+            localStorage.setItem('hellArmorVolume', value); 
+            playSound(440, 50, 'sine', 0.1, 0.5); 
+        }
+        function resetHighScore() {
+            if (confirm("คุณแน่ใจหรือไม่ว่าต้องการรีเซ็ต High Score และ Credits ทั้งหมด?")) {
+                gameStats.highScore = 0;
+                gameStats.credits = 0;
+                gameStats.upgrades = { damage: 1, fireRate: 1, speed: 1, armor: 1, laserUses: 1 };
+                gameStats.skins = ['Default']; 
+                gameStats.activeSkin = 'Default';
+                saveGameData();
+                alert("ข้อมูลเกมทั้งหมดถูกรีเซ็ตแล้ว!");
+                updateStartMenuUI();
+                updateShopUI();
+                updateSkinsUI();
+            }
+        }
+                // -------------------------------------------------------------------
+        // ## 6. Shop and Upgrade Logic
+        // -------------------------------------------------------------------
+        
+        function getUpgradeCost(type, level) {
+            if (level >= MAX_UPGRADE_LEVEL && (type !== 'LASER' && type !== 'DAMAGE')) return null; 
+            if (level >= 3 && type === 'LASER') return null; 
+            if (level >= 8 && type === 'DAMAGE') return null; 
+            
+            let baseCost = 0;
+            if (type === 'DAMAGE') baseCost = 100; 
+            else if (type === 'FIRE') baseCost = 150;
+            else if (type === 'SPEED') baseCost = 200;
+            else if (type === 'ARMOR') baseCost = 250;
+            else if (type === 'LASER') baseCost = 500;
+            
+            return Math.round(baseCost + (level - 1) * (baseCost * 0.7)); 
+        }
+        
+        function updateShopUI() {
+            const creditDisplayShop = document.getElementById('credit-display-shop');
+            if(creditDisplayShop) creditDisplayShop.textContent = gameStats.credits;
+            
+            const upgrades = [
+                { type: 'DAMAGE', key: 'damage' }, 
+                { type: 'FIRE', key: 'fireRate' },
+                { type: 'SPEED', key: 'speed' },
+                { type: 'ARMOR', key: 'armor' },
+                { type: 'LASER', key: 'laserUses' } 
+            ];
+
+            upgrades.forEach(({ type, key }) => {
+                const level = gameStats.upgrades[key];
+                const cost = getUpgradeCost(type, level);
+                const button = document.getElementById(`buy-${type.toLowerCase()}`);
+                const levelSpan = document.getElementById(`upgrade-${key}-level`);
+                const costSpan = document.getElementById(`cost-${type.toLowerCase()}`);
+                const maxLevel = type === 'LASER' ? 3 : (type === 'DAMAGE' ? 8 : MAX_UPGRADE_LEVEL);
+                
+                if (levelSpan) levelSpan.textContent = level;
+
+                if (level >= maxLevel) {
+                    if(costSpan) costSpan.textContent = 'MAX';
+                    if(button) {
+                        button.disabled = true;
+                        button.textContent = 'MAX LEVEL';
+                    }
+                } else {
+                    if(costSpan) costSpan.textContent = cost;
+                    if(button) {
+                        button.disabled = gameStats.credits < cost;
+                        button.textContent = `BUY: ${cost}`;
+                    }
+                }
+            });
+            
+             const buyLife = document.getElementById('buy-life');
+             const buyRepair = document.getElementById('buy-repair');
+             if(buyLife) buyLife.disabled = gameStats.credits < 500;
+             if(buyRepair) buyRepair.disabled = gameStats.credits < 800;
+        }
+        
+        function buyUpgrade(type) {
+            let key;
+            if (type === 'DAMAGE') key = 'damage'; 
+            else if (type === 'FIRE') key = 'fireRate';
+            else if (type === 'SPEED') key = 'speed';
+            else if (type === 'ARMOR') key = 'armor';
+            else if (type === 'LASER') key = 'laserUses';
+            else return;
+
+            const currentLevel = gameStats.upgrades[key];
+            const cost = getUpgradeCost(type, currentLevel);
+            const maxLevel = type === 'LASER' ? 3 : (type === 'DAMAGE' ? 8 : MAX_UPGRADE_LEVEL);
+            
+            if (currentLevel >= maxLevel || gameStats.credits < cost) {
+                playSound(100, 50, 'sawtooth', 0.5, 0.5); 
+                return;
+            }
+
+            gameStats.credits -= cost;
+            gameStats.upgrades[key]++;
+            saveGameData();
+            updateShopUI();
+            updateStartMenuUI();
+            
+            playSound(440, 50, 'sine', 0.2, 1.5); 
+            playSound(660, 50, 'sine', 0.2, 1.5); 
+        }
+        
+        function buyConsumable(type) {
+            let cost = 0;
+            if (type === 'LIFE') cost = 500;
+            else if (type === 'REPAIR') cost = 800;
+            
+            if (gameStats.credits < cost) {
+                playSound(100, 50, 'sawtooth', 0.5, 0.5); 
+                return;
+            }
+            
+            gameStats.credits -= cost;
+            saveGameData();
+            updateShopUI();
+            updateStartMenuUI();
+            
+            if (type === 'LIFE') {
+                lives = Math.min(lives + 1, 5); 
+                showWaveMessage('+1 LIFE!', '#f39c12');
+            } else if (type === 'REPAIR') {
+                baseHealth = MAX_BASE_HEALTH;
+                showWaveMessage('BASE REPAIRED!', '#e74c3c');
+            }
+            playSound(880, 50, 'sine', 0.3, 1.5);
+        }
+                // -------------------------------------------------------------------
+        // ## 7. Skins Logic
+        // -------------------------------------------------------------------
+        
+        function updateSkinsUI() {
+            const activeSkinDisplay = document.getElementById('active-skin-display');
+            if(activeSkinDisplay) activeSkinDisplay.textContent = gameStats.activeSkin;
+            const skinsListDiv = document.getElementById('skins-list');
+            
+            if (!skinsListDiv) return;
+            
+            skinsListDiv.innerHTML = ''; 
+
+            Object.keys(ALL_TANK_SKINS).forEach(skinName => {
+                const isCollected = gameStats.skins.includes(skinName);
+                const isActive = gameStats.activeSkin === skinName;
+                const skinData = ALL_TANK_SKINS[skinName];
+
+                const button = document.createElement('button');
+                button.className = 'game-button';
+                button.style.backgroundColor = isCollected ? skinData.color : '#7f8c8d';
+                button.style.color = isCollected ? '#fff' : '#bdc3c7';
+                button.style.fontSize = '1.5vmin';
+                button.style.padding = '10px';
+                button.style.cursor = isCollected ? 'pointer' : 'not-allowed';
+
+                if (isActive) {
+                    button.textContent = `${skinName} (ACTIVE)`;
+                    button.style.boxShadow = '0 4px #fff';
+                } else if (isCollected) {
+                    button.textContent = `USE: ${skinName}`;
+                    button.onclick = () => activateSkin(skinName);
+                } else {
+                    button.textContent = `${skinName} (LOCKED)`;
+                    button.disabled = true;
+                }
+
+                skinsListDiv.appendChild(button);
+            });
+        }
+        
+        function activateSkin(skinName) {
+            if (gameStats.skins.includes(skinName)) {
+                gameStats.activeSkin = skinName;
+                saveGameData();
+                updateSkinsUI();
+                showWaveMessage(`Skin changed to ${skinName}`);
+                playSound(880, 50, 'sine', 0.2, 1.5); 
+                
+                // Re-apply skin to playerTank if game is active
+                if (gameActive && playerTank) {
+                    const activeSkinData = ALL_TANK_SKINS[gameStats.activeSkin] || ALL_TANK_SKINS['Default'];
+                    playerTank.color = activeSkinData.color;
+                    playerTank.barrelColor = activeSkinData.barrelColor;
+                    playerTank.bulletColor = activeSkinData.bulletColor;
+                }
+            }
+        }
+        
+        function spawnSkinDrop(x, y) {
+            const uncollectedSkins = Object.keys(ALL_TANK_SKINS).filter(
+                skinName => !gameStats.skins.includes(skinName)
+            );
+            
+            if (uncollectedSkins.length === 0) {
+                console.log("All skins collected. No skin drop.");
+                return;
+            }
+
+            const skinToDrop = uncollectedSkins[Math.floor(Math.random() * uncollectedSkins.length)];
+            
+            powerUps.push({
+                x: x, y: y, size: 50, 
+                color: ALL_TANK_SKINS[skinToDrop].color, 
+                symbol: 'S', 
+                type: 'SKIN_DROP', 
+                speedY: 2.5, 
+                rotation: 0,
+                rotationSpeed: 0.08,
+                isSkinDrop: true, 
+                skinName: skinToDrop 
+            });
+            showWaveMessage('SKIN DROP!');
+        }
+        
+        function collectSkin(skinName) {
+            if (!gameStats.skins.includes(skinName)) {
+                gameStats.skins.push(skinName);
+                saveGameData();
+                showWaveMessage(`NEW SKIN: ${skinName}!`);
+                playSound(1200, 100, 'sine', 0.8, 1.5);
+                updateSkinsUI(); // Update UI if we are in skins menu
+            }
+        }
+                // -------------------------------------------------------------------
+        // ## 8. Game Flow & Initialization
+        // -------------------------------------------------------------------
+        
+        function initGameVariables() {
+            // Ensure Canvas dimensions are set
+            if (canvas.width !== CANVAS_WIDTH || canvas.height !== CANVAS_HEIGHT) {
+                 canvas.width = CANVAS_WIDTH;
+                 canvas.height = CANVAS_HEIGHT;
+            }
+            
+            // Apply Upgrades
+            const damageLevel = gameStats.upgrades.damage; 
+            const speedLevel = gameStats.upgrades.speed;
+            const armorLevel = gameStats.upgrades.armor;
+            const fireLevel = gameStats.upgrades.fireRate;
+            const laserLevel = gameStats.upgrades.laserUses;
+            
+            const effectivePlayerSpeed = BASE_PLAYER_SPEED + (speedLevel - 1) * 1.5;
+            MAX_BASE_HEALTH = BASE_MAX_HEALTH + (armorLevel - 1) * 25;
+            originalShootDelay = BASE_SHOOT_DELAY - (fireLevel - 1) * 40; 
+            playerShootDelay = originalShootDelay; 
+            bulletDamage = BASE_BULLET_DAMAGE + (damageLevel - 1) * 0.5; 
+
+            const activeSkinData = ALL_TANK_SKINS[gameStats.activeSkin] || ALL_TANK_SKINS['Default'];
+
+            // CRITICAL: Initialize playerTank
+            playerTank = { 
+                x: canvas.width / 5, y: canvas.height - 60, // ปรับตำแหน่ง y
+                size: 45, speed: effectivePlayerSpeed, 
+                color: activeSkinData.color, 
+                barrelColor: activeSkinData.barrelColor,
+                bulletColor: activeSkinData.bulletColor,
+                invincible: 0,
+                hasShield: false 
+            };
+            bullets = []; enemyBullets = []; enemies = []; particles = []; powerUps = []; 
+            
+            score = 0; lives = 7; wave = 1; currentCredits = 0; 
+            laserUses = laserLevel; 
+            laserCooldown = 0; 
+            
+            // Reset Power-Up state
+            powerUpActive = null; 
+            powerUpDuration = 0; 
+            creditMagnetRange = 0; 
+            if(powerUpTimerDisplay) powerUpTimerDisplay.style.display = 'none';
+
+            lastShootTime = 0; 
+            enemySpawnTimer = 0; 
+            enemySpawnDelay = 2000;
+            
+            screenFlashTimer = 0; cameraShakeX = 0; cameraShakeY = 0;
+            baseHealth = MAX_BASE_HEALTH; 
+            
+            killCount = 0; 
+            bossActive = false;
+            currentCombo = 0;
+            lastKillTime = 0;
+            
+            showWaveMessage(`WAVE ${wave}`);
+            updateUI(0); 
+        }
+
+        function endGame() {
+            gameActive = false;
+            gameStats.credits += currentCredits; 
+            
+            if (score > gameStats.highScore) {
+                gameStats.highScore = score;
+            }
+            saveGameData();
+            updateStartMenuUI(); 
+
+            const finalScore = document.getElementById('final-score');
+            const finalCredits = document.getElementById('final-credits');
+            if(finalScore) finalScore.textContent = score;
+            if(finalCredits) finalCredits.textContent = currentCredits;
+            
+            // Fix: Ensure we stop the loop if it's still running
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            
+            changeScreen('GAME_OVER');
+            playSound(50, 1000, 'triangle', 0.8, 0.5);
+        }
+
+        function changeScreen(newScreen) {
+            currentScreen = newScreen;
+            hideAllUIs();
+            
+            // --- New: Reference the new control overlay ---
+            const ingameControls = document.getElementById('ingame-controls-overlay'); 
+
+            if (uiPanels[newScreen]) {
+                uiPanels[newScreen].style.display = 'flex';
+                if(controlsBar) controlsBar.style.display = 'none'; 
+                if(mobileControls) mobileControls.style.display = 'none'; 
+                // --- New: Hide in-game controls when in menu ---
+                if(ingameControls) ingameControls.style.display = 'none'; 
+            } else if (newScreen === 'PLAYING') {
+                if(controlsBar) controlsBar.style.display = 'flex'; 
+                if(mobileControls) mobileControls.style.display = window.innerWidth < 800 ? 'flex' : 'none';
+                // --- New: Show in-game controls when playing ---
+                if(ingameControls) ingameControls.style.display = 'flex'; 
+            }
+            
+            if (newScreen === 'START') {
+                updateStartMenuUI();
+                isPaused = false; 
+                if(pauseOverlay) pauseOverlay.style.display = 'none';
+            }
+            if (newScreen === 'SHOP') {
+                 updateShopUI();
+            }
+            if (newScreen === 'SKINS') { 
+                 updateSkinsUI();
+            }
+            
+            if (newScreen !== 'PLAYING') {
+                gameActive = false;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+        
+        function startGameFlow() {
+            changeScreen('PLAYING'); 
+            _startTheGame();
+        }
+
+        function _startTheGame() {
+            if (gameActive) return;
+
+            // 1. Initialize all game variables and player stats
+            initGameVariables(); 
+            
+            // 2. Start the game loop
+            gameActive = true;
+            lastTime = performance.now();
+            
+            if (!playerTank) {
+                console.error("Player tank object failed to initialize.");
+                gameActive = false;
+                changeScreen('START');
+                return;
+            }
+            
+            if (!animationFrameId) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+                // -------------------------------------------------------------------
+        // ## 9. Drawing Functions 
+        // -------------------------------------------------------------------
+        
+        function drawBullet(bullet) {
+            if (!bullet) return;
+            ctx.fillStyle = bullet.color || '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(bullet.x, bullet.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawEnemy(enemy) {
+            if (!enemy) return;
+            const size = enemy.size, x = enemy.x, y = enemy.y;
+            
+            const bodyWidth  = enemy.width  || size * 1.3;
+            const bodyHeight = enemy.height || size * 1;
+
+            ctx.fillStyle = enemy.color || '#8e44ad';
+            ctx.fillRect(
+            x - bodyWidth / 2,
+            y - bodyHeight / 2,
+            bodyWidth,
+            bodyHeight
+            );
+
+
+            // Draw Turret Base (or some other detail)
+            ctx.fillStyle = '#2c3e50'; 
+            ctx.beginPath();
+            ctx.arc(x, y - size * 0.15, size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Health Bar
+            const healthBarWidth = size * 0.8;
+            const healthBarHeight = 3;
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(x - healthBarWidth / 2, y - size * 0.7, healthBarWidth, healthBarHeight);
+            
+            const healthPercentage = enemy.health / enemy.maxHealth;
+            ctx.fillStyle = healthPercentage > 0.5 ? '#2ecc71' : (healthPercentage > 0.2 ? '#f1c40f' : '#e74c3c');
+            ctx.fillRect(x - healthBarWidth / 2, y - size * 0.7, healthBarWidth * healthPercentage, healthBarHeight);
+        }
+        
+        function drawPlayerTank() {
+            if (!playerTank) return;
+            
+            // Invincibility Flash
+            if (playerTank.invincible > 0 && Math.floor(Date.now() / 100) % 2 === 0) return;
+            
+            const size = playerTank.size, x = playerTank.x, y = playerTank.y;
+            
+            // --- NEW: Draw Shield ---
+            if (playerTank.hasShield) {
+                const shieldRadius = size * 0.7;
+                ctx.beginPath();
+                ctx.arc(x, y - size * 0.1, shieldRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(52, 152, 219, 0.8)';
+                ctx.fillStyle = 'rgba(52, 152, 219, 0.2)';
+                ctx.lineWidth = 3;
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // Shadow (Visual Depth)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + size * 0.35, size * 0.4, size * 0.1, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Body
+            ctx.fillStyle = playerTank.color;
+            ctx.fillRect(x - size / 2, y - size / 2, size, size * 0.7);
+            
+            // Draw Turret Base
+            ctx.fillStyle = playerTank.barrelColor; 
+            ctx.beginPath();
+            ctx.arc(x, y - size * 0.15, size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw Cannon 
+            ctx.fillStyle = powerUpActive === 'FAST_FIRE' ? '#e74c3c' : (powerUpActive === 'MULTI_SHOT' ? '#8e44ad' : playerTank.barrelColor); 
+            ctx.fillRect(x - 5, y - size * 0.7, 10, size * 0.5); 
+            
+            // Cooldown Meter 
+            if (laserCooldown > 0) {
+                const maxCooldown = 5000;
+                const cooldownRatio = laserCooldown / maxCooldown;
+                const meterLength = size * 1.5;
+                ctx.fillStyle = 'rgba(231, 76, 60, 0.7)';
+                ctx.fillRect(x - meterLength / 2, y - size * 1.2, meterLength * cooldownRatio, 5);
+                ctx.strokeStyle = '#e74c3c';
+                ctx.strokeRect(x - meterLength / 2, y - size * 1.2, meterLength, 5);
+            }
+            
+            // --- NEW: Draw Magnet Range ---
+            if (creditMagnetRange > 0) {
+                ctx.beginPath();
+                ctx.arc(x, y, creditMagnetRange, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(241, 196, 15, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        
+        function drawParticle(p) {
+            if (!p) return;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawPowerUp(item) {
+            if (!item) return;
+            const x = item.x, y = item.y, size = item.size;
+            
+            // Background Circle
+            ctx.fillStyle = item.color;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Symbol (Text)
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `${size * 1.2}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(item.symbol, x, y);
+        }
+        
+        function drawBaseHealth() {
+            const W = canvas.width;
+            const H = canvas.height;
+            const healthBarWidth = W; 
+            const healthBarHeight = 20; 
+            const healthPercentage = baseHealth / MAX_BASE_HEALTH;
+
+            // Draw Base Line (Red Zone)
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(0, BASE_LINE_Y, W, H - BASE_LINE_Y); 
+
+            // Health Bar Background
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(0, BASE_LINE_Y - healthBarHeight, healthBarWidth, healthBarHeight);
+
+            // Actual Health Bar
+            ctx.fillStyle = healthPercentage > 0.5 ? '#2ecc71' : (healthPercentage > 0.2 ? '#f1c40f' : '#e74c3c');
+            ctx.fillRect(0, BASE_LINE_Y - healthBarHeight, healthBarWidth * healthPercentage, healthBarHeight);
+
+            // Base Health Text (เดิม)
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Roboto Mono';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`BASE HEALTH: ${Math.round(baseHealth)} / ${MAX_BASE_HEALTH}`, W / 2, BASE_LINE_Y - healthBarHeight / 2);
+                        // --- NEW: Draw Base Health & Lives ABOVE the base health bar ---
+            
+            // 1. Draw Lives (ซ้าย)
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '2.5vmin Roboto Mono'; // ใช้ font ใหญ่ขึ้น
+            ctx.textAlign = 'left';
+            // ตำแหน่ง: เหนือแถบเขียว/แดงเล็กน้อย, ชิดซ้าย
+            ctx.fillText(`Lives: ${lives}`, 10, BASE_LINE_Y - healthBarHeight - 15); 
+            
+            // 2. Draw Wave (ขวา)
+            ctx.textAlign = 'right';
+            ctx.fillText(`Wave: ${wave}`, W - 10, BASE_LINE_Y - healthBarHeight - 15);
+            
+            // 3. Draw Base Health Status (ตรงกลาง)
+            ctx.textAlign = 'center';
+            ctx.fillStyle = healthPercentage > 0.5 ? '#2ecc71' : '#f1c40f'; // สีตามสถานะ
+            ctx.font = '3vmin Roboto Mono'; 
+            ctx.fillText(`${Math.round(healthPercentage * 100)}%`, W / 2, BASE_LINE_Y - healthBarHeight - 15);
+            
+            // Note: BASE_LINE_Y - healthBarHeight - 15 คือตำแหน่งที่อยู่เหนือแถบสุขภาพฐาน
+        }
+        
+        function drawGame() {
+            // Apply Camera Shake
+            const shakeX = Math.floor(Math.random() * cameraShakeX * 2) - cameraShakeX;
+            const shakeY = Math.floor(Math.random() * cameraShakeY * 2) - cameraShakeY;
+            ctx.save();
+            ctx.translate(shakeX, shakeY);
+            
+            // Clear Canvas
+            ctx.fillStyle = screenFlashTimer > 0 ? '#ffffff' : '#444444'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Lanes (Roads)
+            ctx.strokeStyle = '#cccccc';
+            ctx.lineWidth = 5;
+            for (let i = 0; i <= NUM_LANES; i++) {
+                const x = i * LANE_WIDTH;
+                // Dashed line
+                ctx.beginPath();
+                ctx.setLineDash([20, 15]);
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, BASE_LINE_Y); 
+                ctx.stroke();
+            }
+            ctx.setLineDash([]); // Reset line dash
+
+            // Draw Game Objects
+            drawBaseHealth();
+            if (playerTank) drawPlayerTank();
+            
+            enemies.forEach(drawEnemy);
+            bullets.forEach(drawBullet);
+            enemyBullets.forEach(drawBullet);
+            particles.forEach(drawParticle);
+            powerUps.forEach(drawPowerUp);
+
+            // Restore Canvas state (remove shake)
+            ctx.restore();
+        }
+                // -------------------------------------------------------------------
+        // ## 10. Core Game Logic (Spawning, Updates, Collision)
+        // -------------------------------------------------------------------
+        
+        // --- Spawning Logic (Simplified for brevity) ---
+        function getBossStats(waveNum) {
+            const H = CANVAS_HEIGHT;
+            const W = CANVAS_WIDTH;
+            return {
+                health: 50 + (waveNum * 10), 
+                color: '#e74c3c', 
+                creditValue: 500, 
+                speedY: 0.5, 
+                shootDelay: 1000, 
+                size: 100, 
+                type: 'boss', 
+                bulletCount: 5, 
+                maxHealth: 50 + (waveNum * 10),
+                x: W / 2, 
+                y: H * 0.15 
+            };
+        }
+        
+        function getEnemyStats(waveNum) {
+            const baseSpeed = 1.5 + Math.min(waveNum * 0.1, 4);
+            const baseHealth = 1 + Math.floor(waveNum / 5); 
+            const baseDelay = Math.max(2500 - (waveNum * 100), 800); 
+
+            let typeOptions = ['normal'];
+            if (waveNum >= 3) typeOptions.push('fast');
+            if (waveNum >= 5) typeOptions.push('heavy');
+            if (waveNum >= 8) typeOptions.push('scatter');
+            if (waveNum >= 12) typeOptions.push('airlock'); 
+            if (waveNum >= 15) typeOptions.push('homing'); 
+
+            const randomType = typeOptions[Math.floor(Math.random() * typeOptions.length)];
+            
+            const enemySkins = [
+                { color: '#f1c40f', bulletColor: '#f39c12' }, 
+                { color: '#8e44ad', bulletColor: '#9b59b6' },
+                { color: '#3498db', bulletColor: '#2980b9' },
+                { color: '#e74c3c', bulletColor: '#c0392b' }
+            ];
+            const randomSkin = enemySkins[Math.floor(Math.random() * enemySkins.length)];
+
+            // Returns for different enemy types using randomSkin
+             let stats = { health: baseHealth, creditValue: 10, speedY: baseSpeed, size: 35, shootDelay: baseDelay, type: 'normal', bulletCount: 1, maxHealth: baseHealth, color: randomSkin.color, bulletColor: randomSkin.bulletColor, isHoming: false };
+
+            if (randomType === 'heavy') {
+                 stats.health *= 3; 
+                 stats.maxHealth = stats.health;
+                 stats.speedY *= 0.7;
+                 stats.size = 50;
+                 stats.creditValue = 30;
+                 stats.color = '#7f8c8d';
+            } else if (randomType === 'fast') {
+                 stats.speedY *= 1.8;
+                 stats.shootDelay = 4000; // Shoots less
+                 stats.creditValue = 15;
+            } else if (randomType === 'scatter') {
+                 stats.bulletCount = 3;
+                 stats.shootDelay = Math.max(stats.shootDelay, 1500); 
+                 stats.creditValue = 20;
+            } else if (randomType === 'homing') {
+                 stats.isHoming = true;
+                 stats.bulletColor = '#e74c3c';
+                 stats.color = '#c0392b';
+                 stats.creditValue = 25;
+            }
+            
+            return stats;
+        }
+        
+        function spawnEnemy(stats) {
+            const laneIndex = Math.floor(Math.random() * NUM_LANES);
+            const x = LANE_WIDTH * laneIndex + LANE_WIDTH / 2;
+            const y = -stats.size / 2;
+
+            enemies.push({
+                ...stats,
+                x: stats.x !== undefined ? stats.x : x,
+                y: stats.y !== undefined ? stats.y : y,
+                lane: laneIndex,
+                lastShot: Date.now() + Math.random() * 2000 
+            });
+        }
+        
+        function updateSpawning(deltaTime) {
+            enemySpawnTimer -= deltaTime;
+            
+            // Boss Wave Logic
+            if (wave % 5 === 0 && !bossActive && enemies.length === 0) {
+                bossActive = true;
+                showWaveMessage(`BOSS WAVE ${wave}!`, '#e74c3c');
+                spawnEnemy(getBossStats(wave));
+                enemySpawnTimer = 30000; // Long delay after boss starts
+                return;
+            }
+            
+            // Standard Enemy Spawning
+            if (enemySpawnTimer <= 0 && !bossActive) {
+                const stats = getEnemyStats(wave);
+                // Increase number of enemies to spawn per burst as wave increases
+                const numToSpawn = Math.min(Math.ceil(wave / 2), 3); 
+                for(let i=0; i<numToSpawn; i++) {
+                    if (enemies.length < 50) { // Safety limit
+                        spawnEnemy(stats);
+                    }
+                }
+                
+                // Adjust spawn delay based on wave level
+                enemySpawnDelay = Math.max(500, 2000 - (wave * 50)); 
+                enemySpawnTimer = enemySpawnDelay;
+
+            }
+            
+             // Logic to advance standard wave if all enemies are cleared and timer is running low/0
+            if (!bossActive && enemies.length === 0 && enemySpawnTimer <= 0) {
+                 wave++;
+                 showWaveMessage(`WAVE ${wave}`);
+                 // Increase difficulty slightly by reducing max delay
+                 enemySpawnDelay = Math.max(500, 2000 - (wave * 50)); 
+                 enemySpawnTimer = 1000; // 1 second break before next wave begins spawning
+            }
+        }
+        
+        function enemyFire(enemy, isTargeted = false) {
+            const numBullets = enemy.bulletCount || 1;
+            const bulletBaseSpeed = 7;
+            
+            for(let i=0; i<numBullets; i++) {
+                let speedX = 0;
+                let speedY = bulletBaseSpeed;
+                
+                if (isTargeted && playerTank) {
+                    const targetX = playerTank.x;
+                    const targetY = playerTank.y;
+                    
+                    const dx = targetX - enemy.x;
+                    const dy = targetY - enemy.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 0) {
+                        speedX = (dx / distance) * bulletBaseSpeed;
+                        speedY = (dy / distance) * bulletBaseSpeed;
+                    } 
+                } 
+                
+                // Scatter fire pattern
+                if (enemy.type === 'scatter' && numBullets > 1) {
+                    const spreadAngle = Math.PI / 8; // Total 22.5 degrees spread
+                    const angleOffset = (i - (numBullets - 1) / 2) * (spreadAngle / (numBullets - 1));
+                    const angle = Math.atan2(speedY, speedX) + angleOffset;
+                    speedX = Math.cos(angle) * bulletBaseSpeed;
+                    speedY = Math.sin(angle) * bulletBaseSpeed;
+                }
+                
+                enemyBullets.push({
+                    x: enemy.x, y: enemy.y + enemy.size / 2,
+                    speedY: speedY, speedX: speedX, color: enemy.bulletColor, size: 5,
+                    isHoming: enemy.isHoming 
+                });
+            }
+            
+            enemy.lastShot = Date.now();
+            playSound(100, 30, 'square', 0.1, 0.4);
+        }
+                function fireBullet() {
+            const currentTime = Date.now();
+            if (isPaused || !playerTank || !gameActive) return; 
+            
+            if (currentTime - lastShootTime > playerShootDelay) {
+                
+                const activeBulletColor = playerTank.bulletColor;
+                const speed = -15;
+
+                if (powerUpActive === 'MULTI_SHOT') {
+                    const spreadAngle = Math.PI / 12; 
+                    bullets.push({ x: playerTank.x, y: playerTank.y - playerTank.size * 0.7, speed: speed, speedX: 0, color: POWER_UP_TYPES.MULTI_SHOT.color, damage: bulletDamage * 0.7 });
+                    bullets.push({ x: playerTank.x - 5, y: playerTank.y - playerTank.size * 0.7, speed: speed * Math.cos(spreadAngle), speedX: speed * Math.sin(spreadAngle), color: POWER_UP_TYPES.MULTI_SHOT.color, damage: bulletDamage * 0.7 });
+                    bullets.push({ x: playerTank.x + 5, y: playerTank.y - playerTank.size * 0.7, speed: speed * Math.cos(spreadAngle), speedX: -speed * Math.sin(spreadAngle), color: POWER_UP_TYPES.MULTI_SHOT.color, damage: bulletDamage * 0.7 });
+                    playSound(700, 50, 'square', 0.2, 1.2);
+                } else if (powerUpActive === 'FAST_FIRE') {
+                    bullets.push({ 
+                        x: playerTank.x, y: playerTank.y - playerTank.size * 0.7, speed: speed, speedX: 0,
+                        color: POWER_UP_TYPES.FAST_FIRE.color, damage: bulletDamage
+                    });
+                     playSound(900, 30, 'square', 0.2, 1.5);
+                } else {
+                    bullets.push({ 
+                        x: playerTank.x, y: playerTank.y - playerTank.size * 0.7, speed: speed, speedX: 0,
+                        color: activeBulletColor, damage: bulletDamage 
+                    });
+                    playSound(600, 50, 'square', 0.1, 1.2);
+                }
+
+                lastShootTime = currentTime;
+                
+                if (powerUpActive === 'FAST_FIRE') {
+                     playerShootDelay = originalShootDelay * 0.4; 
+                } else {
+                     playerShootDelay = originalShootDelay;
+                }
+            }
+        }
+
+        function updateEnemies() {
+            const now = Date.now();
+            if (!enemies) return;
+
+            const baseAttackDamage = 1;
+
+            enemies = enemies.filter(enemy => {
+                // Boss Movement
+                if (enemy.type === 'boss') {
+                    if (enemy.y < CANVAS_HEIGHT * 0.15) enemy.y += enemy.speedY; 
+                    
+                    if (now - enemy.lastShot > enemy.shootDelay) {
+                        enemyFire(enemy, true); 
+                        enemy.lastShot = now;
+                    }
+                    return enemy.health > 0;
+                }
+                
+                // Normal Movement
+                enemy.y += enemy.speedY; 
+                
+                if (now - enemy.lastShot > enemy.shootDelay && enemy.y > 0) {
+                    enemyFire(enemy, enemy.type === 'homing'); 
+                }
+                
+                if (enemy.y >= BASE_LINE_Y) { 
+                    baseHealth = Math.max(0, baseHealth - (enemy.size / 2 * baseAttackDamage));
+                    createExplosion(enemy.x, BASE_LINE_Y, 'red', 15);
+                    shakeCamera(10, 150);
+                    playSound(50, 200, 'triangle', 0.8, 0.5); 
+                    
+                    if (baseHealth <= 0) {
+                        endGame(); 
+                        return false; 
+                    }
+                    return false; 
+                }
+                return enemy.health > 0; 
+            });
+            
+             if (bossActive && enemies.filter(e => e.type === 'boss').length === 0) {
+                bossActive = false;
+                wave++;
+                showWaveMessage(`BOSS DEFEATED! WAVE ${wave} START!`);
+                enemySpawnTimer = 3000; 
+                shakeCamera(30, 500);
+            }
+        }
+                function checkCollisions() {
+            // Bullet - Enemy Collision
+            bullets = bullets.filter((bullet) => {
+                let hit = false;
+                enemies.forEach((enemy, eIndex) => {
+                    const combinedRadius = (enemy.size / 2) + 2; 
+                    const distX = bullet.x - enemy.x;
+                    const distY = bullet.y - enemy.y;
+                    
+                    if (Math.abs(distX) < combinedRadius && Math.abs(distY) < combinedRadius) {
+                        enemy.health -= bullet.damage || BASE_BULLET_DAMAGE; 
+                        hit = true;
+                        createExplosion(bullet.x, bullet.y, 'yellow', 5);
+                        playSound(900, 20, 'sine', 0.05, 1.0); 
+                        if (enemy.health <= 0) {
+                            
+                            updateCombo(true); 
+                            
+                            const comboBonus = currentCombo * 0.5;
+                            const finalScore = Math.round(10 + enemy.size + comboBonus);
+                            score += finalScore; 
+                            currentCredits += enemy.creditValue; 
+                            
+                            createExplosion(enemy.x, enemy.y, 'red', 20);
+                            shakeCamera(5, 50); 
+                            playSound(150, 80, 'sawtooth', 0.2, 0.7); 
+                            
+                            killCount++;
+                            
+                            // PowerUp Drop Chance (15% chance)
+                            if (Math.random() < 0.15) { 
+                                spawnPowerUp(enemy.x, enemy.y);
+                            }
+                            
+                            if (killCount >= KILLS_TO_DROP_SKIN) {
+                                spawnSkinDrop(enemy.x, enemy.y);
+                                killCount = 0; 
+                            }
+                        }
+                    }
+                });
+                return !hit; 
+            });
+            
+            // Re-filter enemies outside of the loop to ensure correct index handling
+            enemies = enemies.filter(e => e.health > 0);
+
+
+            // Enemy Bullet - Player Collision 
+            if (playerTank) {
+                enemyBullets = enemyBullets.filter(b => {
+                    const combinedRadius = (playerTank.size / 2) + b.size;
+                    const distX = b.x - playerTank.x;
+                    const distY = b.y - playerTank.y;
+                    
+                    if (Math.abs(distX) < combinedRadius && Math.abs(distY) < combinedRadius) {
+                        // NEW: Shield takes priority over invincibility
+                        if (playerTank.hasShield) {
+                             playerTank.hasShield = false;
+                             showWaveMessage('SHIELD DOWN!', '#3498db');
+                             playSound(200, 200, 'square', 0.5, 0.5);
+                             return false; // Bullet is destroyed
+                        }
+
+                        if (playerTank.invincible <= 0) {
+                            lives--;
+                            playerTank.invincible = 3000; 
+                            createExplosion(playerTank.x, playerTank.y, 'red', 30);
+                            shakeCamera(10, 200);
+                            playSound(100, 500, 'square', 0.8, 0.5); 
+                            updateCombo(false); // Reset combo on hit
+                            
+                            if (lives <= 0) {
+                                endGame();
+                            }
+                        }
+                        return false; // Bullet is destroyed
+                    }
+                    // Bullet missed player
+                    return true;
+                });
+            }
+                        // PowerUp/Skin Drop collision
+            if (playerTank) {
+                powerUps = powerUps.filter((item) => {
+                    const combinedRadius = (playerTank.size / 2) + (item.size / 2);
+                    const distX = item.x - playerTank.x;
+                    const distY = item.y - playerTank.y;
+                    
+                    // NEW: Magnet range collection
+                    const magnetCollection = creditMagnetRange > 0 && Math.abs(distX) < creditMagnetRange && Math.abs(distY) < creditMagnetRange;
+                    
+                    if (magnetCollection) {
+                        // Accelerate towards player if inside magnet range
+                         const angle = Math.atan2(playerTank.y - item.y, playerTank.x - item.x);
+                         item.x += Math.cos(angle) * 10; // Speed up
+                         item.y += Math.sin(angle) * 10;
+                    }
+
+                    if (Math.abs(distX) < combinedRadius && Math.abs(distY) < combinedRadius) {
+                        if (item.isSkinDrop) {
+                            collectSkin(item.skinName);
+                            return false; 
+                        } else {
+                           activatePowerUp(item.type); 
+                           return false; 
+                        }
+                    }
+                    return true;
+                });
+            }
+        }
+        
+        function updateCombo(killedEnemy) {
+            const now = Date.now();
+            
+            if (killedEnemy) {
+                if (now - lastKillTime <= COMBO_TIME_LIMIT) {
+                    currentCombo++;
+                } else {
+                    currentCombo = 1;
+                }
+                lastKillTime = now;
+            } else {
+                 currentCombo = 0; // Reset combo on hit
+            }
+            
+            if (currentCombo > 1) {
+                if(comboDisplayOverlay) {
+                    comboDisplayOverlay.style.display = 'block';
+                    comboDisplayOverlay.textContent = `COMBO x${currentCombo}!`;
+                }
+                if(comboCountDisplay) comboCountDisplay.textContent = currentCombo; 
+                
+                if (currentCombo % 5 === 0) {
+                     playSound(440 + currentCombo * 20, 50, 'sine', 0.2, 1.0);
+                }
+            } else {
+                if(comboDisplayOverlay) comboDisplayOverlay.style.display = 'none';
+                if(comboCountDisplay) comboCountDisplay.textContent = 0; 
+            }
+        }
+
+        function updateBullets() { 
+            if (bullets) bullets = bullets.filter(b => { 
+                b.x += b.speedX || 0; 
+                b.y += b.speed; 
+                return b.y > 0 && b.x > -10 && b.x < canvas.width + 10; 
+            });
+            if (enemyBullets) enemyBullets = enemyBullets.filter(b => { 
+                
+                if (b.isHoming && playerTank) {
+                    const homingSpeed = 0.05; 
+                    const dx = playerTank.x - b.x;
+                    const dy = playerTank.y - b.y;
+                    const targetAngle = Math.atan2(dy, dx);
+                    
+                    const currentAngle = Math.atan2(b.speedY, b.speedX);
+                    
+                    let diff = targetAngle - currentAngle;
+                    if (diff > Math.PI) diff -= 2 * Math.PI;
+                    if (diff < -Math.PI) diff += 2 * Math.PI;
+                    
+                    const newAngle = currentAngle + Math.min(Math.max(diff, -homingSpeed), homingSpeed);
+                    const speedMagnitude = Math.sqrt(b.speedX * b.speedX + b.speedY * b.speedY);
+                    
+                    b.speedX = Math.cos(newAngle) * speedMagnitude;
+                    b.speedY = Math.sin(newAngle) * speedMagnitude;
+                }
+                
+                b.y += b.speedY; 
+                b.x += b.speedX; 
+                return b.y < canvas.height && b.x > -10 && b.x < canvas.width + 10; 
+            });
+        }
+               function updateParticles() {
+            if (particles) particles = particles.filter(p => {
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.life -= 15;
+                p.size *= 0.98;
+                return p.life > 0;
+            });
+        }
+        
+        function createExplosion(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 1;
+                particles.push({
+                    x: x, y: y,
+                    speedX: Math.cos(angle) * speed,
+                    speedY: Math.sin(angle) * speed,
+                    color: color,
+                    size: Math.random() * 4 + 1,
+                    life: 500
+                });
+            }
+        }
+
+        // --- PowerUp Functions ---
+        
+        function spawnPowerUp(x, y) {
+            // 70% chance to drop a consumable Power-Up (30% for Credit Magnet)
+            let typeKeys = Object.keys(POWER_UP_TYPES).filter(k => k !== 'CREDIT_MAGNET');
+            
+            if (Math.random() < 0.3) {
+                typeKeys = ['CREDIT_MAGNET'];
+            }
+            
+            const randomTypeKey = typeKeys[Math.floor(Math.random() * typeKeys.length)];
+            const type = POWER_UP_TYPES[randomTypeKey];
+            
+            powerUps.push({
+                x: x, y: y, size: 20, 
+                color: type.color, 
+                symbol: type.symbol, 
+                type: randomTypeKey, 
+                speedY: 2.5, 
+                isSkinDrop: false 
+            });
+        }
+        
+        function activatePowerUp(typeKey) {
+            const type = POWER_UP_TYPES[typeKey];
+            if (!type || !playerTank) return;
+            
+            // If already active, just reset timer (except for Shield/Magnet which stack or modify)
+            if (powerUpActive === typeKey && typeKey !== 'SHIELD' && typeKey !== 'CREDIT_MAGNET') {
+                powerUpDuration = type.duration;
+            } else {
+                 powerUpActive = typeKey;
+                 powerUpDuration = type.duration;
+            }
+
+            // Apply immediate effects
+            if (typeKey === 'SHIELD') {
+                playerTank.hasShield = true;
+                powerUpActive = null; // Shield is not timed, it's a one-hit buffer
+                powerUpDuration = 0;
+                showWaveMessage(`SHIELD ACTIVATED!`, type.color);
+            } else if (typeKey === 'FAST_FIRE') {
+                playerShootDelay = originalShootDelay * 0.4;
+                showWaveMessage(`FAST FIRE!`, type.color);
+            } else if (typeKey === 'MULTI_SHOT') {
+                // Multi-Shot effect is applied in fireBullet()
+                showWaveMessage(`MULTI SHOT!`, type.color);
+            } else if (typeKey === 'CREDIT_MAGNET') {
+                creditMagnetRange = 250; // Set magnet range
+                showWaveMessage(`CREDIT MAGNET!`, type.color);
+            }
+            
+            playSound(1000, 100, 'sine', 0.5, 1.5);
+            if(powerUpTimerDisplay) powerUpTimerDisplay.style.display = 'block';
+        }
+               function updatePowerUps(deltaTime) {
+            if (!powerUps) return;
+
+            // Move power-ups down
+            powerUps = powerUps.filter(p => {
+                p.y += p.speedY;
+                return p.y < CANVAS_HEIGHT + 50; 
+            });
+            
+            // Handle active power-up timer
+            if (powerUpActive && powerUpDuration > 0) {
+                powerUpDuration = Math.max(0, powerUpDuration - deltaTime);
+                const type = POWER_UP_TYPES[powerUpActive];
+                if(powerUpTimerDisplay && type) {
+                    powerUpTimerDisplay.textContent = `${type.name}: ${Math.ceil(powerUpDuration / 1000)}s`;
+                }
+
+                if (powerUpDuration === 0) {
+                    // Reset effects when timer runs out
+                    if (powerUpActive === 'FAST_FIRE') {
+                        playerShootDelay = originalShootDelay;
+                    } else if (powerUpActive === 'CREDIT_MAGNET') {
+                        creditMagnetRange = 0;
+                    }
+                    
+                    showWaveMessage(`${POWER_UP_TYPES[powerUpActive].name} ENDED`, '#7f8c8d');
+                    powerUpActive = null;
+                    if(powerUpTimerDisplay) powerUpTimerDisplay.style.display = 'none';
+                }
+            } else if (powerUpTimerDisplay) {
+                 powerUpTimerDisplay.style.display = 'none';
+            }
+        }
+        
+        // -------------------------------------------------------------------
+        // ## 11. Game Loop (Final Integration)
+        // -------------------------------------------------------------------
+        
+        function updateUI(deltaTime) {
+            if(scoreDisplay) scoreDisplay.textContent = score;
+            if(creditsDisplay) creditsDisplay.textContent = currentCredits;
+            if(livesDisplay) livesDisplay.textContent = lives;
+            if(levelDisplay) levelDisplay.textContent = wave;
+            if(comboCountDisplay) comboCountDisplay.textContent = currentCombo; 
+            
+            // Update Laser button state
+            if(laserButton) {
+                laserUseCount.textContent = laserUses;
+                laserButton.disabled = laserUses <= 0 || laserCooldown > 0;
+                if (laserCooldown > 0) {
+                    laserButton.textContent = `LASER (Q): ${Math.ceil(laserCooldown / 1000)}s`;
+                } else {
+                     laserButton.textContent = `LASER (Q): ${laserUses}`;
+                }
+            }
+            
+            // Update Skin Drop Counter
+            const nextSkinCount = KILLS_TO_DROP_SKIN - killCount;
+            if(nextSkinDisplay) nextSkinDisplay.textContent = Math.max(0, nextSkinCount);
+            
+            // Update Invincibility timer
+            if (playerTank && playerTank.invincible > 0) {
+                playerTank.invincible = Math.max(0, playerTank.invincible - deltaTime);
+            }
+            // Update Screen Flash timer
+            if (screenFlashTimer > 0) {
+                screenFlashTimer = Math.max(0, screenFlashTimer - deltaTime);
+            }
+        }
+        
+        function gameLoop(timestamp) {
+            if (!gameActive || isPaused) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                return;
+            }
+                        let deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            // Limit delta time to prevent physics breaking on lag
+            if (deltaTime > 100) deltaTime = 100;
+
+            // 1. Update Logic
+            handleControls();
+            
+            updateSpawning(deltaTime); 
+            
+            updateBullets(); 
+            updateParticles();
+            
+            updatePowerUps(deltaTime); 
+            
+            updateEnemies(); 
+            checkCollisions();
+            
+            // Combo Decay
+            if (Date.now() - lastKillTime > COMBO_TIME_LIMIT) {
+                updateCombo(false);
+            }
+            
+            if (laserCooldown > 0) {
+                laserCooldown = Math.max(0, laserCooldown - deltaTime);
+            }
+            
+            updateUI(deltaTime);
+
+            // 2. Draw Game 
+            drawGame(); 
+
+            // 3. Loop
+            animationFrameId = requestAnimationFrame(gameLoop); 
+        }
+
+        // --- Start Game Flow ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // CRITICAL: Ensure Canvas dimensions are set upon load
+            if (canvas.width !== CANVAS_WIDTH || canvas.height !== CANVAS_HEIGHT) {
+                 canvas.width = CANVAS_WIDTH;
+                 canvas.height = CANVAS_HEIGHT;
+            }
+            
+            loadGameData();
+            changeScreen('START'); // Force start menu display
+            
+            console.log("HELL ARMOR Initialized.");
+        });
+        
+    </script>
+</body>
+</html>
